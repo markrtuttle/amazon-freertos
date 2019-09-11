@@ -525,9 +525,10 @@ static IotHttpsReturnCode_t _flushHttpsNetworkData( _httpsConnection_t * pHttpsC
  * @param[in] pJob Pointer the to the HTTP request sending job.
  * @param[in] pUserContext Pointer to an HTTP request, passed as an opaque context.
  */
-static void _sendHttpsRequest( IotTaskPool_t pTaskPool,
-                               IotTaskPoolJob_t pJob,
-                               void * pUserContext );
+//static
+void _sendHttpsRequest( IotTaskPool_t pTaskPool,
+			IotTaskPoolJob_t pJob,
+			void * pUserContext );
 
 
 /**
@@ -2111,9 +2112,10 @@ static IotHttpsReturnCode_t _sendHttpsHeadersAndBody( _httpsConnection_t * pHttp
 
 /*-----------------------------------------------------------*/
 
-static void _sendHttpsRequest( IotTaskPool_t pTaskPool,
-                               IotTaskPoolJob_t pJob,
-                               void * pUserContext )
+//static
+void _sendHttpsRequest( IotTaskPool_t pTaskPool,
+			IotTaskPoolJob_t pJob,
+			void * pUserContext )
 {
     HTTPS_FUNCTION_ENTRY( IOT_HTTPS_OK );
 

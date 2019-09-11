@@ -1,4 +1,8 @@
-#include "global_state_HTTP.h"
+/****************************************************************/
+
+// TODO: Generate a header file for function declarations
+IotHttpsResponseHandle_t allocate_IotResponseHandle();
+IotHttpsRequestHandle_t allocate_IotRequestHandle();
 
 /****************************************************************/
 
@@ -43,53 +47,6 @@ size_t http_parser_execute (http_parser *parser,
 }
 
 /****************************************************************
- * User callbacks constructor
- ****************************************************************/
-
-void CBMCappendHeaderCallback( void * pPrivData,
-			       IotHttpsRequestHandle_t reqHandle ) {
-  assert(pPrivData);
-  assert(reqHandle);
-}
-void CBMCwriteCallback( void * pPrivData,
-			IotHttpsRequestHandle_t reqHandle )
-{
-  assert(pPrivData);
-  assert(reqHandle);
-}
-
-void CBMCreadReadyCallback( void * pPrivData,
-			    IotHttpsResponseHandle_t respHandle,
-			    IotHttpsReturnCode_t rc,
-			    uint16_t status ) {
-  assert(pPrivData);
-  assert(respHandle);
-}
-void CBMCresponseCompleteCallback( void * pPrivData,
-				   IotHttpsResponseHandle_t respHandle,
-				   IotHttpsReturnCode_t rc,
-				   uint16_t status ) {
-  assert(pPrivData);
-  assert(respHandle);
-}
-void CBMCconnectionClosedCallback( void * pPrivData,
-				   IotHttpsConnectionHandle_t connHandle,
-				   IotHttpsReturnCode_t rc ) {
-  assert(pPrivData);
-  assert(connHandle);
-}
-void CBMCerrorCallback( void * pPrivData,
-			IotHttpsRequestHandle_t reqHandle,
-			IotHttpsResponseHandle_t respHandle,
-			IotHttpsReturnCode_t rc ) {
-  assert(pPrivData);
-  assert(reqHandle);
-  assert(respHandle);
-}
-
-// Incomplete...
-
-/****************************************************************
  * IotNetworkInterface constructor
  ****************************************************************/
 
@@ -111,8 +68,6 @@ IotNetworkError_t IotNetworkInterfaceCreate( void * pConnectionInfo,
   return error;
 }
 
-size_t IotNetworkInterfaceSend_iteration;
-
 size_t IotNetworkInterfaceSend( void * pConnection,
 				const uint8_t * pMessage,
 				size_t messageLength ) {
@@ -121,22 +76,6 @@ size_t IotNetworkInterfaceSend( void * pConnection,
 
   size_t size;
   __CPROVER_assume(size <= messageLength);
-
-  size_t current_iteration = IotNetworkInterfaceSend_iteration;
-
-  if (IotNetworkInterfaceSend_iteration >= 2) {
-    size = messageLength;
-    IotNetworkInterfaceSend_iteration = 0;
-    return size;
-  }
-
-  if (size >= messageLength) {
-    IotNetworkInterfaceSend_iteration = 0;
-    return size;
-  }
-
-  IotNetworkInterfaceSend_iteration++;
-
   return size;
 }
 
@@ -246,6 +185,9 @@ IotHttpsConnectionInfo_t * allocate_IotConnectionInfo() {
   return pConnInfo;
 }
 
+void initialize_IotConnectionInfo(IotHttpsConnectionInfo_t *pConnInfo) {
+}
+
 int is_valid_IotConnectionInfo(IotHttpsConnectionInfo_t *pConnInfo) {
   return
     pConnInfo->pCaCert &&
@@ -272,35 +214,31 @@ IotHttpsConnectionHandle_t allocate_IotConnectionHandle () {
   return pConnectionHandle;
 }
 
-void
-initialize_IotConnectionHandle (IotHttpsConnectionHandle_t
-				pConnectionHandle) {
+void initialize_IotConnectionHandle (IotHttpsConnectionHandle_t
+				     pConnectionHandle) {
   if(pConnectionHandle) {
     IotListDouble_Create(&pConnectionHandle->reqQ);
     IotListDouble_Create(&pConnectionHandle->respQ);
     // Add zero or one element to response queue
-    if (nondet_bool()) {
+    //    if (nondet_bool()) {
       IotHttpsResponseHandle_t resp = allocate_IotResponseHandle();
       __CPROVER_assume(resp);
-      __CPROVER_assume(!resp->isAsync);
-      initialize_IotResponseHandle(resp);
+      __CPROVER_assume(is_valid_IotResponseHandle(resp));
       IotListDouble_InsertHead(&pConnectionHandle->respQ, &resp->link);
-    }
+    //    }
     // Add zero or one element to request queue
-    if (nondet_bool()) {
+    //    if (nondet_bool()) {
       IotHttpsRequestHandle_t req = allocate_IotRequestHandle();
       __CPROVER_assume(req);
-      __CPROVER_assume(req->pHttpsConnection);
-      __CPROVER_assume(req->pHttpsResponse);
-      // Testing synchronous API!!
-      __CPROVER_assume(!req->isAsync);
-      initialize_IotRequestHandle(req);
+      __CPROVER_assume(is_valid_IotRequestHandle(req));
       IotListDouble_InsertHead(&pConnectionHandle->reqQ, &req->link);
-    }
- }
+    //    }
+  }
+  return pConnectionHandle;
 }
 
 int is_valid_IotConnectionHandle(IotHttpsConnectionHandle_t handle) {
+  if (!handle) return 1; // null handle, nothing to check
   return
     handle->pNetworkConnection &&
     handle->pNetworkInterface &&
@@ -320,30 +258,28 @@ IotHttpsResponseHandle_t allocate_IotResponseHandle() {
     size_t bodyLen;
     pResponseHandle->pHeaders = safeMalloc(headerLen);
     pResponseHandle->pBody = safeMalloc(bodyLen);
-    pResponseHandle->pHttpsConnection = allocate_IotConnectionHandle();
     pResponseHandle->pReadHeaderField =
       safeMalloc(pResponseHandle->readHeaderFieldLength);
     pResponseHandle->pReadHeaderValue =
       safeMalloc(pResponseHandle->readHeaderValueLength);
+    pResponseHandle->pHttpsConnection = allocate_IotConnectionHandle();
   }
   return pResponseHandle;
 }
 
-// ???: Should be is_stubbed
-void
-initialize_IotResponseHandle(IotHttpsResponseHandle_t pResponseHandle) {
+void initialize_IotResponseHandle(IotHttpsResponseHandle_t pResponseHandle) {
   if(pResponseHandle) {
-    void * handle = pResponseHandle;
-    void * parserinfo = &(pResponseHandle->httpParserInfo);
-    void * parserfunc = &(pResponseHandle->httpParserInfo.parseFunc);
+    // Move to is_stubbed
     pResponseHandle->httpParserInfo.parseFunc = http_parser_execute;
-    // Do we need a more complete model of queued requests and responses?
-    __CPROVER_assume(!pResponseHandle->link.pPrevious);
-    __CPROVER_assume(!pResponseHandle->link.pNext);
+    // Move to is_stubbed ^^^
+    initialize_IotConnectionHandle(pResponseHandle->pHttpsConnection);
   }
+  return pResponseHandle;
 }
 
 int is_valid_IotResponseHandle(IotHttpsResponseHandle_t pResponseHandle) {
+  if (!pResponseHandle) return 1; // null handle, nothing to check
+
   int required1 =
     __CPROVER_same_object(pResponseHandle->pHeaders,
 			  pResponseHandle->pHeadersCur) &&
@@ -366,26 +302,15 @@ int is_valid_IotResponseHandle(IotHttpsResponseHandle_t pResponseHandle) {
   int valid_body_order =
     pResponseHandle->pBody <= pResponseHandle->pBodyCur &&
     pResponseHandle->pBodyCur <=  pResponseHandle->pBodyEnd;
+  // this assumption fails and must be included in the harness itself.
   int valid_parserdata =
     pResponseHandle->httpParserInfo.readHeaderParser.data == pResponseHandle;
-  int bounded_header_buffer =
-    __CPROVER_OBJECT_SIZE(pResponseHandle->pHeaders) < CBMC_MAX_OBJECT_SIZE;
-  int bounded_body_buffer =
-    __CPROVER_OBJECT_SIZE(pResponseHandle->pBody) < CBMC_MAX_OBJECT_SIZE;
-  int bounded_field_buffer =
-    __CPROVER_OBJECT_SIZE(pResponseHandle->pReadHeaderField) < CBMC_MAX_OBJECT_SIZE;
-  int bounded_value_buffer =
-    __CPROVER_OBJECT_SIZE(pResponseHandle->pReadHeaderValue) < CBMC_MAX_OBJECT_SIZE;
   return
     valid_headers &&
     valid_header_order &&
     valid_body &&
     valid_body_order &&
     valid_parserdata &&
-    bounded_header_buffer &&
-    bounded_body_buffer &&
-    bounded_field_buffer &&
-    bounded_value_buffer &&
     // valid_order and short circuit evaluation prevents integer overflow
     __CPROVER_r_ok(pResponseHandle->pHeaders,
 		   pResponseHandle->pHeadersEnd - pResponseHandle->pHeaders) &&
@@ -394,7 +319,31 @@ int is_valid_IotResponseHandle(IotHttpsResponseHandle_t pResponseHandle) {
     __CPROVER_r_ok(pResponseHandle->pBody,
 		   pResponseHandle->pBodyEnd - pResponseHandle->pBody) &&
     __CPROVER_w_ok(pResponseHandle->pBody,
-		   pResponseHandle->pBodyEnd - pResponseHandle->pBody);
+		   pResponseHandle->pBodyEnd - pResponseHandle->pBody) &&
+    is_valid_IotConnectionHandle(pResponseHandle->pHttpsConnection);
+}
+
+/****************************************************************
+ * IotClientCallbacks
+ ****************************************************************/
+
+IotHttpsClientCallbacks_t *allocate_IotClientCallbacks() {
+  return safeMalloc(sizeof(IotHttpsClientCallbacks_t));
+}
+
+int is_valid_IotClientCallbacks(IotHttpsClientCallbacks_t *cb) {
+  return 1;
+}
+
+int is_stubbed_IotClientCallbacks(IotHttpsClientCallbacks_t *cb) {
+  return
+    cb &&
+    !cb->appendHeaderCallback &&
+    !cb->writeCallback &&
+    !cb->readReadyCallback &&
+    !cb->responseCompleteCallback &&
+    !cb->connectionClosedCallback &&
+    !cb->errorCallback;
 }
 
 /****************************************************************
@@ -407,27 +356,26 @@ IotHttpsRequestHandle_t allocate_IotRequestHandle() {
     safeMalloc(sizeof(struct _httpsRequest));
   if (pRequestHandle) {
     uint32_t headerLen;
-    pRequestHandle->pHttpsResponse = allocate_IotResponseHandle();
-    pRequestHandle->pHttpsConnection = allocate_IotConnectionHandle();
     pRequestHandle->pHeaders = safeMalloc(headerLen);
     pRequestHandle->pBody = safeMalloc(pRequestHandle->bodyLength);
     pRequestHandle->pConnInfo = allocate_IotConnectionInfo();
+    pRequestHandle->pHttpsResponse = allocate_IotResponseHandle();
+    pRequestHandle->pHttpsConnection = allocate_IotConnectionHandle();
+    pRequestHandle->pUserPrivData = safeMalloc(1);
+    pRequestHandle->pCallbacks = allocate_IotClientCallbacks();
   }
   return pRequestHandle;
 }
 
-void
-initialize_IotRequestHandle(IotHttpsRequestHandle_t pRequestHandle) {
-  if(pRequestHandle) {
-    __CPROVER_assume(!pRequestHandle->link.pPrevious);
-    __CPROVER_assume(!pRequestHandle->link.pNext);
-    if(pRequestHandle->pHttpsResponse) {
-      initialize_IotResponseHandle(pRequestHandle->pHttpsResponse);
-    }
-  }
+void initialize_IotRequestHandle(IotHttpsRequestHandle_t pRequestHandle) {
+  initialize_IotConnectionInfo(pRequestHandle->pConnInfo);
+  initialize_IotResponseHandle(pRequestHandle->pHttpsResponse);
+  initialize_IotConnectionHandle(pRequestHandle->pHttpsConnection);
 }
 
 int is_valid_IotRequestHandle(IotHttpsRequestHandle_t pRequestHandle) {
+  if (!pRequestHandle) return 1;  // pointer null, nothing to check
+
   int required =
     __CPROVER_same_object(pRequestHandle->pHeaders,
 			  pRequestHandle->pHeadersCur) &&
@@ -437,26 +385,31 @@ int is_valid_IotRequestHandle(IotHttpsRequestHandle_t pRequestHandle) {
 
   int valid_headers =
     pRequestHandle->pHeaders != NULL;
+  int bounded_header_buffer =
+    __CPROVER_OBJECT_SIZE(pRequestHandle->pHeaders) < CBMC_MAX_OBJECT_SIZE;
   int valid_order =
     pRequestHandle->pHeaders <= pRequestHandle->pHeadersCur &&
     pRequestHandle->pHeadersCur <=  pRequestHandle->pHeadersEnd;
   int valid_body =
     pRequestHandle->pBody != NULL;
-  int bounded_header_buffer =
-    __CPROVER_OBJECT_SIZE(pRequestHandle->pHeaders) < CBMC_MAX_OBJECT_SIZE;
-  int bounded_body_buffer =
-    __CPROVER_OBJECT_SIZE(pRequestHandle->pBody) < CBMC_MAX_OBJECT_SIZE;
   return
     valid_headers &&
+    bounded_header_buffer &&
     valid_order &&
     valid_body &&
-    bounded_header_buffer &&
-    bounded_body_buffer &&
     // valid_order and short circuit evaluation prevents integer overflow
     __CPROVER_r_ok(pRequestHandle->pHeaders,
 		   pRequestHandle->pHeadersEnd - pRequestHandle->pHeaders) &&
     __CPROVER_w_ok(pRequestHandle->pHeaders,
-		   pRequestHandle->pHeadersEnd - pRequestHandle->pHeaders);
+		   pRequestHandle->pHeadersEnd - pRequestHandle->pHeaders) &&
+    is_valid_IotConnectionInfo(pRequestHandle->pConnInfo) &&
+    is_valid_IotResponseHandle(pRequestHandle->pHttpsResponse) &&
+    is_valid_IotConnectionHandle(pRequestHandle->pHttpsConnection) &&
+    is_valid_IotClientCallbacks(pRequestHandle->pCallbacks);
+}
+
+int is_stubbed_IotRequestHandle(IotHttpsRequestHandle_t pRequestHandle) {
+  return is_stubbed_IotClientCallbacks(pRequestHandle->pCallbacks);
 }
 
 /****************************************************************
