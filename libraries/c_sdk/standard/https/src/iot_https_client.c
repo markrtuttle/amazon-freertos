@@ -300,7 +300,7 @@ static int _httpParserOnMessageCompleteCallback( http_parser * pHttpParser );
  * @param[in] pNetworkConnection - The network connection with the HTTPS connection, passed by the network stack.
  * @param[in] pReceiveContext - A pointer to the HTTPS Client connection handle for which the packet was received.
  */
-static void _networkReceiveCallback( void * pNetworkConnection,
+/*static*/ void _networkReceiveCallback( void * pNetworkConnection,
                                      void * pReceiveContext );
 
 /**
@@ -1045,7 +1045,7 @@ static IotHttpsReturnCode_t _receiveHttpsBodySync( _httpsResponse_t * pHttpsResp
 
 /*-----------------------------------------------------------*/
 
-static void _networkReceiveCallback( void * pNetworkConnection,
+/*static*/ void _networkReceiveCallback( void * pNetworkConnection,
                                      void * pReceiveContext )
 {
     HTTPS_FUNCTION_ENTRY( IOT_HTTPS_OK );

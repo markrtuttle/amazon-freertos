@@ -1,0 +1,50 @@
+/* FreeRTOS includes. */
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "FreeRTOS_Sockets.h"
+
+/* FreeRTOS+TCP includes. */
+#include "iot_https_client.h"
+#include "iot_https_internal.h"
+
+#include "../global_state_HTTP.c"
+
+/* This is a clang macro not available on linux */
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
+#if __has_builtin(__builtin___memcpy_chk)
+void *__builtin___memcpy_chk(void *dest, const void *src, size_t n, size_t m) {
+  __CPROVER_assert(__CPROVER_w_ok(dest, n), "write");
+  __CPROVER_assert(__CPROVER_r_ok(src, n), "read");
+  return dest;
+}
+#else
+void *memcpy(void *dest, const void *src, size_t n) {
+  __CPROVER_assert(__CPROVER_w_ok(dest, n), "write");
+  __CPROVER_assert(__CPROVER_r_ok(src, n), "read");
+  return dest;
+}
+#endif
+
+// function under test
+void _networkReceiveCallback( void * pNetworkConnection,
+                                     void * pReceiveContext );
+
+IotHttpsClientCallbacks_t NULL_CCIF = { 0 };
+
+void harness() {
+  // This parameter is irrelevant (unused by the function)
+  size_t pNetworkConnection_size;
+  void *pNetworkConnection = safeMalloc(pNetworkConnection_size);
+
+  // pReceiveContext
+  IotHttpsConnectionHandle_t pReceiveContext = allocate_IotConnectionHandle();
+  __CPROVER_assume(pReceiveContext);
+  initialize_IotConnectionHandle(pReceiveContext);
+  __CPROVER_assume(is_valid_IotConnectionHandle(pReceiveContext));
+  __CPROVER_assume(is_stubbed_NetworkInterface(pReceiveContext->pNetworkInterface));
+
+  _networkReceiveCallback(pNetworkConnection, (void *)pReceiveContext);
+}

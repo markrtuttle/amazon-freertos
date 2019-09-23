@@ -164,6 +164,21 @@ size_t IotNetworkInterfaceReceive( void * pConnection,
   return size;
 }
 
+size_t IotNetworkInterfaceReceiveUpto( void * pConnection,
+				       uint8_t * pBuffer,
+				       size_t bytesRequested ) {
+  __CPROVER_assert(pConnection, "IotNetworkInterfaceReceiveUpto pConnection");
+  __CPROVER_assert(pBuffer, "IotNetworkInterfaceReceiveUpto pBuffer");
+
+  /* Fill the entire memory object pointed to by pBuffer with
+   * unconstrained data.  This use of __CPROVER_array_copy with a
+   * single byte is a common CBMC idiom. */
+  size_t size;
+  __CPROVER_assume(size <= bytesRequested);
+  return size;
+}
+
+
 IotNetworkError_t IotNetworkInterfaceCallback( void * pConnection,
 					       IotNetworkReceiveCallback_t
 					         receiveCallback,
@@ -191,6 +206,7 @@ IotNetworkInterface_t IOTNI = {
   .close = IotNetworkInterfaceClose,
   .send = IotNetworkInterfaceSend,
   .receive = IotNetworkInterfaceReceive,
+  .receiveUpto = IotNetworkInterfaceReceiveUpto,
   .setReceiveCallback = IotNetworkInterfaceCallback,
   .destroy = IotNetworkInterfaceDestroy
 };
@@ -206,6 +222,7 @@ int is_valid_NetworkInterface(IotNetworkInterface_t *netif) {
     netif->close &&
     netif->send &&
     netif->receive &&
+    netif->receiveUpto &&
     netif->setReceiveCallback &&
     netif->destroy;
 }
@@ -222,6 +239,7 @@ int is_stubbed_NetworkInterface(IotNetworkInterface_t *netif) {
     netif->close == IotNetworkInterfaceClose &&
     netif->send == IotNetworkInterfaceSend &&
     netif->receive == IotNetworkInterfaceReceive &&
+    netif->receiveUpto == IotNetworkInterfaceReceiveUpto &&
     netif->setReceiveCallback == IotNetworkInterfaceCallback &&
     netif->destroy == IotNetworkInterfaceDestroy;
 }
@@ -282,8 +300,10 @@ initialize_IotConnectionHandle (IotHttpsConnectionHandle_t
     if (nondet_bool()) {
       IotHttpsResponseHandle_t resp = allocate_IotResponseHandle();
       __CPROVER_assume(resp);
+      // Testing synchronous API!!
       __CPROVER_assume(!resp->isAsync);
       initialize_IotResponseHandle(resp);
+      __CPROVER_assume(is_valid_IotResponseHandle(resp));
       IotListDouble_InsertHead(&pConnectionHandle->respQ, &resp->link);
     }
     // Add zero or one element to request queue
@@ -295,6 +315,7 @@ initialize_IotConnectionHandle (IotHttpsConnectionHandle_t
       // Testing synchronous API!!
       __CPROVER_assume(!req->isAsync);
       initialize_IotRequestHandle(req);
+      __CPROVER_assume(is_valid_IotRequestHandle(req));
       IotListDouble_InsertHead(&pConnectionHandle->reqQ, &req->link);
     }
  }
@@ -333,10 +354,10 @@ IotHttpsResponseHandle_t allocate_IotResponseHandle() {
 void
 initialize_IotResponseHandle(IotHttpsResponseHandle_t pResponseHandle) {
   if(pResponseHandle) {
-    void * handle = pResponseHandle;
-    void * parserinfo = &(pResponseHandle->httpParserInfo);
-    void * parserfunc = &(pResponseHandle->httpParserInfo.parseFunc);
+    // Initialization of httpParserInfo done by _initializeResponse
     pResponseHandle->httpParserInfo.parseFunc = http_parser_execute;
+    pResponseHandle->httpParserInfo.readHeaderParser.data = (void *) pResponseHandle;
+    pResponseHandle->httpParserInfo.responseParser.data = (void *) pResponseHandle;
     // Do we need a more complete model of queued requests and responses?
     __CPROVER_assume(!pResponseHandle->link.pPrevious);
     __CPROVER_assume(!pResponseHandle->link.pNext);
