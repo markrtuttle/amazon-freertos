@@ -12,8 +12,6 @@
     "$(FREERTOS)/freertos_kernel/list.goto"
   ],
   "DEF": [
-    "'configASSERT(X)=__CPROVER_assert(X, \"Assertion Error\")'",
-    "'configPRECONDITION(X)=__CPROVER_assume(X)'",
     "configUSE_TRACE_FACILITY=0",
     "configGENERATE_RUN_TIME_STATS=0"
   ],
