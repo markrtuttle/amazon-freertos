@@ -1,0 +1,7 @@
+2c2
+<  * FreeRTOS Kernel V10.2.1
+---
+>  * FreeRTOS Kernel V10.2.0
+523a524,525
+> 		configASSERT( pxStaticQueue );
+> 
