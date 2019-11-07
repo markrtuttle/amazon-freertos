@@ -1,5 +1,5 @@
 {
-  "ENTRY": "_networkReceiveCallback",
+  "ENTRY": "SendHttpsRequest",
 
   # A CBMC pointer is an object id followed by an offest into the object.
   # The size of the offset is limited by the size of the object id.
@@ -9,7 +9,10 @@
   "CBMCFLAGS":
   [
     "--unwind 1",
-    "--unwindset _receiveHttpsMessage.0:1,_flushHttpsNetworkData.0:2",
+    "--unwindset _networkSend.0:4",
+
+    # uninitialized global variables have arbitrary values
+    "--nondet-static",
 
     # interesting checks in addtion to memory safety
     "--div-by-zero-check",
@@ -23,15 +26,33 @@
   "OBJS":
   [
     "$(ENTRY)_harness.goto",
+    "../../global_state_HTTP.goto",
     "$(FREERTOS)/libraries/c_sdk/standard/https/src/iot_https_client.goto"
   ],
   "INSTFLAGS":
   [
+    # these should not be removed
+    "--remove-function-body IotNetworkInterfaceCallback",
+    "--remove-function-body IotNetworkInterfaceCreate",
+
+    # verified independently
+    "--remove-function-body _networkReceiveCallback",
+
+    # verified independently
     "--remove-function-body IotHttpsClient_Disconnect",
-    "--remove-function-body IotLogError",
-    "--remove-function-body _receiveHttpsBodyAsync",
-    "--remove-function-body _receiveHttpsBodySync",
-    "--remove-function-body _receiveHttpsHeaders"
+
+    # pulled in by function pointer removal
+    "--remove-function-body IotDeQueue_RemoveAll",
+    "--remove-function-body IotListDouble_RemoveAll",
+    "--remove-function-body IotNetworkInterfaceClose",
+    "--remove-function-body IotNetworkInterfaceDestroy",
+    "--remove-function-body _cancelRequest",
+    "--remove-function-body _httpParserOnHeadersCompleteCallback",
+    "--remove-function-body _httpParserOnMessageBeginCallback",
+    "--remove-function-body _httpParserOnMessageCompleteCallback",
+    "--remove-function-body _networkDestroy",
+    "--remove-function-body _networkDisconnect"
+
   ],
   "INC":
   [
@@ -41,12 +62,13 @@
     "$(FREERTOS)/libraries/c_sdk/standard/common/include/",
     "$(FREERTOS)/libraries/abstractions/platform/include/",
     "$(FREERTOS)/libraries/abstractions/platform/freertos/include/",
-    "../../include"
+    "../..",
+    "../../../include"
   ],
   "DEF":
   [
     "CBMC_OBJECTID_BITS={CBMC_OBJECTID_BITS}",
     "CBMC_MAX_OBJECT_SIZE={CBMC_MAX_OBJECT_SIZE}"
-  ],
-  "OPT" : "-m32"
+  ]
 }
+

@@ -7,7 +7,7 @@
 #include "iot_https_client.h"
 #include "iot_https_internal.h"
 
-#include "../global_state_HTTP.c"
+#include "global_state_HTTP.h"
 
 /* The function under test */
 void _sendHttpsRequest( IotTaskPool_t pTaskPool,
