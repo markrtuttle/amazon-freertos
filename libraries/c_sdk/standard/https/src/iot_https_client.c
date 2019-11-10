@@ -471,7 +471,7 @@ static IotHttpsReturnCode_t _receiveHttpsMessage( _httpsConnection_t * pHttpsCon
  *         #IOT_HTTPS_PARSING_ERROR if there was an error with parsing the header buffer.
  *         #IOT_HTTPS_NETWORK_ERROR if there was an error receiving the data on the network.
  */
-static IotHttpsReturnCode_t _receiveHttpsHeaders( _httpsConnection_t * pHttpsConnection,
+IotHttpsReturnCode_t _receiveHttpsHeaders( _httpsConnection_t * pHttpsConnection,
                                                   _httpsResponse_t * pHttpsResponse );
 
 /**
@@ -541,7 +541,7 @@ void _sendHttpsRequest( IotTaskPool_t pTaskPool,
  *          #IOT_HTTPS_PARSING_ERROR - If there was an issue parsing the HTTP response body.
  *          #IOT_HTTPS_NETWORK_ERROR if there was an error receiving the data on the network.
  */
-static IotHttpsReturnCode_t _receiveHttpsBodyAsync( _httpsResponse_t * pHttpsResponse );
+IotHttpsReturnCode_t _receiveHttpsBodyAsync( _httpsResponse_t * pHttpsResponse );
 
 /**
  * @brief Receive the HTTPS body specific to a synchronous type of response.
@@ -553,7 +553,7 @@ static IotHttpsReturnCode_t _receiveHttpsBodyAsync( _httpsResponse_t * pHttpsRes
  *          #IOT_HTTPS_PARSING_ERROR - If there was an issue parsing the HTTP response body.
  *          #IOT_HTTPS_NETWORK_ERROR if there was an error receiving the data on the network.
  */
-static IotHttpsReturnCode_t _receiveHttpsBodySync( _httpsResponse_t * pHttpsResponse );
+IotHttpsReturnCode_t _receiveHttpsBodySync( _httpsResponse_t * pHttpsResponse );
 
 /**
  * @brief Schedule the task to send the the HTTP request.
@@ -941,7 +941,7 @@ static int _httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-static IotHttpsReturnCode_t _receiveHttpsBodyAsync( _httpsResponse_t * pHttpsResponse )
+IotHttpsReturnCode_t _receiveHttpsBodyAsync( _httpsResponse_t * pHttpsResponse )
 {
     HTTPS_FUNCTION_ENTRY( IOT_HTTPS_OK );
 
@@ -992,7 +992,7 @@ static IotHttpsReturnCode_t _receiveHttpsBodyAsync( _httpsResponse_t * pHttpsRes
 
 /*-----------------------------------------------------------*/
 
-static IotHttpsReturnCode_t _receiveHttpsBodySync( _httpsResponse_t * pHttpsResponse )
+IotHttpsReturnCode_t _receiveHttpsBodySync( _httpsResponse_t * pHttpsResponse )
 {
     HTTPS_FUNCTION_ENTRY( IOT_HTTPS_OK );
     _httpsConnection_t * pHttpsConnection = pHttpsResponse->pHttpsConnection;
@@ -1954,7 +1954,7 @@ static IotHttpsReturnCode_t _receiveHttpsMessage( _httpsConnection_t * pHttpsCon
 
 /*-----------------------------------------------------------*/
 
-static IotHttpsReturnCode_t _receiveHttpsHeaders( _httpsConnection_t * pHttpsConnection,
+IotHttpsReturnCode_t _receiveHttpsHeaders( _httpsConnection_t * pHttpsConnection,
                                                   _httpsResponse_t * pHttpsResponse )
 {
     HTTPS_FUNCTION_ENTRY( IOT_HTTPS_OK );
