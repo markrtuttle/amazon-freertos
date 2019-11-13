@@ -43,7 +43,7 @@ size_t http_parser_execute (http_parser *parser,
 }
 
 /****************************************************************
- * User callbacks constructor
+ * IotHttpsClientCallbacks: user callbacks
  ****************************************************************/
 
 void CBMCappendHeaderCallback( void * pPrivData,
@@ -87,7 +87,21 @@ void CBMCerrorCallback( void * pPrivData,
   assert(respHandle);
 }
 
-// Incomplete...
+IotHttpsClientCallbacks_t *allocate_IotClientCallbacks() {
+  IotHttpsClientCallbacks_t *pCallbacks =
+    safeMalloc(sizeof(IotHttpsClientCallbacks_t));
+  return pCallbacks;
+}
+
+int is_stubbed_IotClientCallbacks(IotHttpsClientCallbacks_t *pCallbacks) {
+  return
+    IS_STUBBED_APPENDHEADERCALLBACK(pCallbacks) &&
+    IS_STUBBED_WRITECALLBACK(pCallbacks) &&
+    IS_STUBBED_READREADYCALLBACK(pCallbacks) &&
+    IS_STUBBED_RESPONSECOMPLETECALLBACK(pCallbacks) &&
+    IS_STUBBED_CONNECTIONCLOSEDCALLBACK(pCallbacks) &&
+    IS_STUBBED_ERRORCALLBACK(pCallbacks);
+}
 
 /****************************************************************
  * IotNetworkInterface constructor
@@ -201,19 +215,9 @@ IotNetworkError_t IotNetworkInterfaceDestroy( void * pConnection ) {
   return error;
 }
 
-IotNetworkInterface_t IOTNI = {
-  .create = IotNetworkInterfaceCreate,
-  .close = IotNetworkInterfaceClose,
-  .send = IotNetworkInterfaceSend,
-  .receive = IotNetworkInterfaceReceive,
-  .receiveUpto = IotNetworkInterfaceReceiveUpto,
-  .setReceiveCallback = IotNetworkInterfaceCallback,
-  .destroy = IotNetworkInterfaceDestroy
-};
-
 /* Models the Network Interface. */
 IotNetworkInterface_t *allocate_NetworkInterface() {
-  return nondet_bool() ? &IOTNI : NULL;
+  return safeMalloc(sizeof(IotNetworkInterface_t));
 }
 
 int is_valid_NetworkInterface(IotNetworkInterface_t *netif) {
@@ -235,13 +239,13 @@ int is_valid_NetworkInterface(IotNetworkInterface_t *netif) {
 
 int is_stubbed_NetworkInterface(IotNetworkInterface_t *netif) {
   return
-    netif->create == IotNetworkInterfaceCreate &&
-    netif->close == IotNetworkInterfaceClose &&
-    netif->send == IotNetworkInterfaceSend &&
-    netif->receive == IotNetworkInterfaceReceive &&
-    netif->receiveUpto == IotNetworkInterfaceReceiveUpto &&
-    netif->setReceiveCallback == IotNetworkInterfaceCallback &&
-    netif->destroy == IotNetworkInterfaceDestroy;
+    IS_STUBBED_NETWORKIF_CREATE(netif) &&
+    IS_STUBBED_NETWORKIF_CLOSE(netif) &&
+    IS_STUBBED_NETWORKIF_SEND(netif) &&
+    IS_STUBBED_NETWORKIF_RECEIVE(netif) &&
+    IS_STUBBED_NETWORKIF_RECEIVEUPTO(netif) &&
+    IS_STUBBED_NETWORKIF_SETRECEIVECALLBACK(netif) &&
+    IS_STUBBED_NETWORKIF_DESTROY(netif);
 }
 
 /****************************************************************
@@ -346,6 +350,8 @@ IotHttpsResponseHandle_t allocate_IotResponseHandle() {
       safeMalloc(pResponseHandle->readHeaderFieldLength);
     pResponseHandle->pReadHeaderValue =
       safeMalloc(pResponseHandle->readHeaderValueLength);
+    pResponseHandle->pCallbacks = allocate_IotClientCallbacks();
+    pResponseHandle->pUserPrivData = safeMalloc(1);
   }
   return pResponseHandle;
 }
