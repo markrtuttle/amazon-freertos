@@ -2,3 +2,6 @@ list(APPEND test_labels http)
 
 add_subdirectory(SendHttpsRequest)
 add_subdirectory(NetworkReceiveCallback)
+add_subdirectory(ReceiveHttpsBodyAsync)
+add_subdirectory(ReceiveHttpsBodySync)
+add_subdirectory(ReceiveHttpsHeaders)
