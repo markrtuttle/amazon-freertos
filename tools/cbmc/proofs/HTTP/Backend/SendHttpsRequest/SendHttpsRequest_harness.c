@@ -83,7 +83,7 @@ void harness() {
     if (reqHandle->pHttpsConnection) {
       __CPROVER_assume(is_valid_IotConnectionHandle(reqHandle->pHttpsConnection));
       if (reqHandle->pHttpsConnection->pNetworkInterface)
-	__CPROVER_assume(is_stubbed_NetworkInterface(reqHandle->pHttpsConnection->pNetworkInterface));
+	__CPROVER_assume(IS_STUBBED_NETWORKIF_SEND(reqHandle->pHttpsConnection->pNetworkInterface));
     }
     if (reqHandle->pHttpsResponse) {
       __CPROVER_assume(is_valid_IotResponseHandle(reqHandle->pHttpsResponse));
