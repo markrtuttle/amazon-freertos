@@ -27,10 +27,11 @@ void harness() {
   initialize_IotResponseHandle(resp);
   __CPROVER_assume(is_valid_IotResponseHandle(resp));
 
-  __CPROVER_assume(!resp->isAsync);
   __CPROVER_assume(resp->pHttpsConnection);
   __CPROVER_assume(resp->pHttpsConnection->pNetworkInterface);
   __CPROVER_assume(IS_STUBBED_NETWORKIF_RECEIVEUPTO(resp->pHttpsConnection->pNetworkInterface));
 
+  __CPROVER_assume( ( resp->pBodyEnd - resp->pBody ) < CBMC_MAX_BUFFER_SIZE);
+  __CPROVER_assume( ( resp->pHeadersEnd - resp->pHeaders ) < CBMC_MAX_BUFFER_SIZE);
   _receiveHttpsHeaders(conn, resp);
 }

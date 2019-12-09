@@ -5,11 +5,13 @@
   # The size of the offset is limited by the size of the object id.
   "CBMC_OBJECTID_BITS": "7",
   "CBMC_MAX_OBJECT_SIZE": "\"(UINT32_MAX>>(CBMC_OBJECTID_BITS+1))\"",
+  "CBMC_MAX_BUFFER_SIZE": "20",
+  "CBMC_BUFFER_UNWIND": "__eval {CBMC_MAX_BUFFER_SIZE} + 1",
 
   "CBMCFLAGS":
   [
     "--unwind 1",
-    "--unwindset  _receiveHttpsMessage.0:1",
+    "--unwindset  _receiveHttpsMessage.0:{CBMC_BUFFER_UNWIND},_incrementNextLocationToWriteBeyondParsed.0:{CBMC_BUFFER_UNWIND}",
 
 
     # uninitialized global variables have arbitrary values
@@ -57,6 +59,7 @@
   "DEF":
   [
     "CBMC_OBJECTID_BITS={CBMC_OBJECTID_BITS}",
-    "CBMC_MAX_OBJECT_SIZE={CBMC_MAX_OBJECT_SIZE}"
+    "CBMC_MAX_OBJECT_SIZE={CBMC_MAX_OBJECT_SIZE}",
+    "CBMC_MAX_BUFFER_SIZE={CBMC_MAX_BUFFER_SIZE}"
   ]
 }

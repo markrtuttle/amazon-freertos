@@ -1862,6 +1862,7 @@ static void _incrementNextLocationToWriteBeyondParsed( uint8_t ** pBufCur,
      * case 3: ["HTTP/1.1 200 OK\r\nheader0: value0\r\nheader1:\0\0\0\0\0\0\0\0\0\0\0"]
      * case 4: ["HTTP/1.1 200 OK\r\nheader0: value0\r\nheader1: \0\0\0\0\0\0\0\0\0\0\0"]
      * then parser may fail or append all of the NULL characters to a header field name or value. */
+    uint8_t *pBufStart = *pBufCur; 
     while( *pBufCur < *pBufEnd )
     {
         if( **pBufCur == CARRIAGE_RETURN_CHARACTER )
@@ -1877,7 +1878,9 @@ static void _incrementNextLocationToWriteBeyondParsed( uint8_t ** pBufCur,
         {
             ( *pBufCur )++;
         }
-        else if( ( **pBufCur == SPACE_CHARACTER ) && ( *( *pBufCur - 1 ) == COLON_CHARACTER ) )
+        else if( ( **pBufCur == SPACE_CHARACTER ) && 
+                 ( pBufStart < *pBufCur ) && 
+                 ( *( *pBufCur - 1 ) == COLON_CHARACTER ) )
         {
             ( *pBufCur )++;
             break;
