@@ -42,13 +42,9 @@ size_t http_parser_execute (http_parser *parser,
   return _httpsResponse->foundHeaderField ? valueLength : 0;
 }
 
-http_parser* allocate_http_parser() 
+http_parser* allocate_http_parser( IotHttpsResponseHandle_t respHandle ) 
 {
   http_parser* pHttpParser = safeMalloc(sizeof(http_parser));
-  IotHttpsResponseHandle_t respHandle = allocate_IotResponseHandle();
-  __CPROVER_assume(respHandle);
-  initialize_IotResponseHandle(respHandle);
-  __CPROVER_assume(is_valid_IotResponseHandle(respHandle));
   if( pHttpParser )
   {
     pHttpParser->data = ( void * )(respHandle);

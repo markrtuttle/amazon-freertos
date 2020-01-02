@@ -661,7 +661,7 @@ static int _httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-static int _httpParserOnStatusCallback( http_parser * pHttpParser,
+/* static */ int _httpParserOnStatusCallback( http_parser * pHttpParser,
                                         const char * pLoc,
                                         size_t length )
 {
