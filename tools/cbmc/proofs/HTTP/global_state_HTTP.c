@@ -42,6 +42,13 @@ size_t http_parser_execute (http_parser *parser,
   return _httpsResponse->foundHeaderField ? valueLength : 0;
 }
 
+http_parser* allocate_http_parser() 
+{
+  http_parser* pHttpParser = safeMalloc(sizeof(http_parser));
+  pHttpParser->data = ( void * )(allocate_IotResponseHandle());
+  return pHttpParser;
+}
+
 /****************************************************************
  * IotHttpsClientCallbacks: user callbacks
  ****************************************************************/
@@ -531,3 +538,4 @@ int is_valid_IotResponseInfo(IotHttpsResponseInfo_t * pRespInfo){
     pRespInfo->pSyncInfo->bodyLen <= CBMC_MAX_OBJECT_SIZE &&
     pRespInfo->userBuffer.bufferLen <= CBMC_MAX_OBJECT_SIZE;
 }
+
