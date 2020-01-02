@@ -9,5 +9,6 @@ int _httpParserOnMessageBeginCallback( http_parser * pHttpParser );
 void harness() 
 {
   http_parser* pHttpParser = allocate_http_parser();
+  __CPROVER_assume(pHttpParser);
   _httpParserOnMessageBeginCallback( pHttpParser );
 }
