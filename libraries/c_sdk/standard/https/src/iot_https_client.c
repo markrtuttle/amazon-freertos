@@ -157,7 +157,7 @@ const uint32_t connectionUserBufferMinimumSize = sizeof( _httpsConnection_t );
  * @return 0 to tell http-parser to keep parsing.
  *         1 to tell http-parser that parsing should stop return from http_parser_execute with error HPE_CB_status.
  */
-static int _httpParserOnStatusCallback( http_parser * pHttpParser,
+/* static */ int _httpParserOnStatusCallback( http_parser * pHttpParser,
                                         const char * pLoc,
                                         size_t length );
 
@@ -176,7 +176,7 @@ static int _httpParserOnStatusCallback( http_parser * pHttpParser,
  * @return 0 to tell http-parser to keep parsing.
  *         1 to tell http-parser that parsing should stop return from http_parser_execute with error HPE_CB_header_field.
  */
-static int _httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
+/* static */ int _httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
                                              const char * pLoc,
                                              size_t length );
 
@@ -688,12 +688,12 @@ static int _httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-static int _httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
+/* static */ int _httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
                                              const char * pLoc,
                                              size_t length )
 {
     IotLogDebug( "Parser: HTTPS header field parsed %.*s", length, pLoc );
-
+    
     _httpsResponse_t * pHttpsResponse = ( _httpsResponse_t * ) ( pHttpParser->data );
 
     /* If we are parsing the network data received in the header buffer then we can increment
