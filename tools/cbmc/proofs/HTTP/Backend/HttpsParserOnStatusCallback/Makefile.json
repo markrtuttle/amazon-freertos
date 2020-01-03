@@ -14,7 +14,7 @@
       # uninitialized global variables have arbitrary values
       "--nondet-static",
   
-      # interesting checks in addtion to memory safety
+      # interesting checks in addition to memory safety
       "--div-by-zero-check",
       "--float-overflow-check",
       "--nan-check",
