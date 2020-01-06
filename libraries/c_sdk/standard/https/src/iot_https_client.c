@@ -253,7 +253,7 @@ const uint32_t connectionUserBufferMinimumSize = sizeof( _httpsConnection_t );
  * @return 0 to tell http-parser to keep parsing.
  *         1 to tell http-parser that parsing should stop return from http_parser_execute with error HPE_CB_message_complete.
  */
-static int _httpParserOnMessageCompleteCallback( http_parser * pHttpParser );
+/* static */ int _httpParserOnMessageCompleteCallback( http_parser * pHttpParser );
 
 /* This code prints debugging information and is, therefore, compiled only when
  * log level is set to IOT_LOG_DEBUG. */
@@ -903,7 +903,7 @@ static int _httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-static int _httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
+/* static */ int _httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
 {
     IotLogDebug( "Parser: End of the HTTPS message reached." );
 
