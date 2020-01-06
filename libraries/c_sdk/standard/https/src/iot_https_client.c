@@ -233,7 +233,7 @@ const uint32_t connectionUserBufferMinimumSize = sizeof( _httpsConnection_t );
  * @return 0 to tell http-parser to keep parsing.
  *         1 to tell http-parser that parsing should stop return from http_parser_execute with error HPE_CB_body.
  */
-static int _httpParserOnBodyCallback( http_parser * pHttpParser,
+/* static */ int _httpParserOnBodyCallback( http_parser * pHttpParser,
                                       const char * pLoc,
                                       size_t length );
 
@@ -812,7 +812,7 @@ static int _httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-static int _httpParserOnBodyCallback( http_parser * pHttpParser,
+/*static*/ int _httpParserOnBodyCallback( http_parser * pHttpParser,
                                       const char * pLoc,
                                       size_t length )
 {
