@@ -841,7 +841,9 @@ static int _httpParserOnMessageBeginCallback( http_parser * pHttpParser )
          * readReadyCallback(), we can pass the body into the body buffer provided right away. */
         if( pHttpsResponse->pBodyCurInHeaderBuf != ( uint8_t * ) pLoc )
         {
-            memcpy( pHttpsResponse->pBodyCurInHeaderBuf, pLoc, length );
+            /* memmove is used because the destination and source overlap. memcpy() cannot guarantee that the bytes in 
+             * pLoc are copied to pBodyCurInHeaderBuf before pLoc is overwritten. */
+            memmove( pHttpsResponse->pBodyCurInHeaderBuf, pLoc, length );
         }
 
         pHttpsResponse->pBodyCurInHeaderBuf += length;
@@ -885,7 +887,10 @@ static int _httpParserOnMessageBeginCallback( http_parser * pHttpParser )
             {
                 if( pHttpsResponse->pBodyCur != ( uint8_t * ) pLoc )
                 {
-                    memcpy( pHttpsResponse->pBodyCur, pLoc, length );
+                    /* memmove is used because the destination and source could overlap.
+                     * memcpy cannot guarantee that the bytes pLoc are copied to pHttpsResponse->pBodyCur
+                     * before pLoc is overwritten. */
+                    memmove( pHttpsResponse->pBodyCur, pLoc, length );
                 }
 
                 pHttpsResponse->pBodyCur += length;
