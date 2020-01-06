@@ -17,12 +17,9 @@ void harness()
   __CPROVER_assume(respHandle->pReadHeaderField);
   __CPROVER_assume(respHandle->readHeaderFieldLength < __CPROVER_OBJECT_SIZE(respHandle->pReadHeaderField));
 
-  http_parser* pHttpParser = allocate_http_parser(respHandle);
-  __CPROVER_assume( pHttpParser );
-
   char * pLoc = respHandle->pHeadersCur;
   size_t length;
   __CPROVER_assume(length < (  respHandle->pHeadersEnd - respHandle->pHeadersCur ) );
 
-  _httpParserOnHeaderFieldCallback( pHttpParser, pLoc, length );
+  _httpParserOnHeaderFieldCallback( &(respHandle->httpParserInfo.responseParser), pLoc, length );
 }

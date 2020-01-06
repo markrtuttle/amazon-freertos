@@ -152,7 +152,5 @@ size_t http_parser_execute (http_parser *parser,
                             const char *data,
                             size_t len);
 
-http_parser* allocate_http_parser( IotHttpsResponseHandle_t respHandle );
-
 #endif
 

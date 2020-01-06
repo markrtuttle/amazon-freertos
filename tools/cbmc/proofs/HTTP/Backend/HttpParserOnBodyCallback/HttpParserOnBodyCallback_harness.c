@@ -15,12 +15,9 @@ void harness()
   initialize_IotResponseHandle(respHandle);
   __CPROVER_assume(is_valid_IotResponseHandle(respHandle));
 
-  http_parser* pHttpParser = allocate_http_parser(respHandle);
-  __CPROVER_assume( pHttpParser );
-
   char * pLoc = respHandle->pHeadersCur;
   size_t length;
   __CPROVER_assume(length < (  respHandle->pHeadersEnd - respHandle->pHeadersCur ) );
 
-  _httpParserOnBodyCallback( pHttpParser, pLoc, length );
+  _httpParserOnBodyCallback( &(respHandle->httpParserInfo.responseParser), pLoc, length );
 }

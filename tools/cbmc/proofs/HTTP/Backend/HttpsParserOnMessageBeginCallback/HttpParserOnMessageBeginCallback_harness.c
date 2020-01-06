@@ -12,9 +12,6 @@ void harness()
   __CPROVER_assume(respHandle);
   initialize_IotResponseHandle(respHandle);
   __CPROVER_assume(is_valid_IotResponseHandle(respHandle));
-
-  http_parser* pHttpParser = allocate_http_parser(respHandle);
-  __CPROVER_assume(pHttpParser);
   
-  _httpParserOnMessageBeginCallback( pHttpParser );
+  _httpParserOnMessageBeginCallback( &(respHandle->httpParserInfo.responseParser) );
 }

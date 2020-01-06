@@ -42,16 +42,6 @@ size_t http_parser_execute (http_parser *parser,
   return _httpsResponse->foundHeaderField ? valueLength : 0;
 }
 
-http_parser* allocate_http_parser( IotHttpsResponseHandle_t respHandle ) 
-{
-  http_parser* pHttpParser = safeMalloc(sizeof(http_parser));
-  if( pHttpParser )
-  {
-    pHttpParser->data = ( void * )(respHandle);
-  }
-  return pHttpParser;
-}
-
 /****************************************************************
  * IotHttpsClientCallbacks: user callbacks
  ****************************************************************/

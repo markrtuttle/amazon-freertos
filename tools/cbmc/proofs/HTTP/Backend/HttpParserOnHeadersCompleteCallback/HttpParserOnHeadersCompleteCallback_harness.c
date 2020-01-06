@@ -4,9 +4,7 @@
 
 #include "global_state_HTTP.h"
 
-int _httpParserOnHeadersCompleteCallback( http_parser * pHttpParser,
-                                 const char * pLoc,
-                                 size_t length );
+int _httpParserOnHeadersCompleteCallback( http_parser * pHttpParser );
 
 void harness()
 {
@@ -15,8 +13,5 @@ void harness()
   initialize_IotResponseHandle(respHandle);
   __CPROVER_assume(is_valid_IotResponseHandle(respHandle));
 
-  http_parser* pHttpParser = allocate_http_parser(respHandle);
-  __CPROVER_assume(pHttpParser);
-
-  _httpParserOnHeadersCompleteCallback( pHttpParser);
+  _httpParserOnHeadersCompleteCallback( &(respHandle->httpParserInfo.responseParser) );
 }
