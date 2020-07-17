@@ -1186,8 +1186,9 @@ struct xTCP_PACKET
  EthernetHeader_t xEthernetHeader;
  IPHeader_t xIPHeader;
  TCPHeader_t xTCPHeader;
-}
+} 
 ;
+
 typedef struct xTCP_PACKET TCPPacket_t;
 typedef union XPROT_PACKET
 {
@@ -1445,9 +1446,14 @@ static size_t prvSingleStepTCPHeaderOptions( const uint8_t * const pucPtr,
             BaseType_t xHasSYNFlag );
 //     requires \valid(&(( ProtocolHeaders_t * ) ( &( pxNetworkBuffer->pucEthernetBuffer[ 14U + ( 20U ) ] ) )->xTCPHeader).ucOptdata);
 //      requires \valid(((ProtocolHeaders_t)( pxNetworkBuffer->pucEthernetBuffer[ 14U + ( 20U ) ])).xTCPHeader.ucOptdata);
+//  uint8_t *pucEthernetBuffer
+//  ProtocolHeaders_t is a struct with many fields, trying to cast the address of a uint8 as a struct?
+//     requires \valid(&( ( ProtocolHeaders_t * )(pxNetworkBuffer->pucEthernetBuffer + 34U)->xTCPHeader ));
+ //    requires \valid(&( ( ProtocolHeaders_t * )(pxNetworkBuffer->pucEthernetBuffer + 34U)->xTCPHeader ->ucOptdata));
+
 /*@
      requires \valid(pxSocket) && \valid(pxNetworkBuffer);
-     requires \valid(pxNetworkBuffer->pucEthernetBuffer + (0..10000));
+     requires \valid(pxNetworkBuffer->pucEthernetBuffer + 34U);
      requires \let pxProtocolHeaders = ( ProtocolHeaders_t * )pxNetworkBuffer->pucEthernetBuffer[ 14U + ( 20U ) ]; 
           \let pxTCPHeader = &( pxProtocolHeaders->xTCPHeader ); 
           \let  pucPtr = (uint8_t *)pxTCPHeader->ucOptdata;    
