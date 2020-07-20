@@ -8,12 +8,15 @@
         0 <= n <= SIZE_MAX;
 */
 
+
 /*@
     requires \valid(pucByte + (0 .. uxRemainingBytes - 1));
+    requires \separated(pucByte, pcName);
     requires is_size_t(uxRemainingBytes);
     requires is_size_t(uxDestLen);
     requires \valid(pcName + (0 .. uxDestLen - 1));
-    assigns pcName[0 .. uxDestLen - 1];
+
+     assigns pcName[0 .. uxDestLen - 1];
 
     ensures uxRemainingBytes == ( size_t ) 0U ==> \result == 0U;
 */
@@ -51,16 +54,21 @@ size_t uxCount;
     }
     else
     {
+        size_t i = 0;
         //@ assert uxSourceLen > 0 && uxDestLen > 0;
         /* 'uxIndex' points to the full name. Walk over the string. */
+        //  loop assigns pcName[\at(uxNameLen, LoopEntry).. uxDestLen - 1], uxNameLen, uxIndex, uxCount;
+
         /*@
             loop invariant 0 <= uxIndex <= uxSourceLen;
             loop invariant \forall size_t j; 0 <= j < uxIndex ==> pucByte[j] != ( uint8_t )0x00U;
-            loop assigns pcName[0 .. uxDestLen - 1], uxNameLen, uxIndex, uxCount;
-            loop variant uxSourceLen - uxIndex;
+            loop assigns uxNameLen, uxIndex, uxCount;
+            loop variant uxSourceLen - i;
         */
         while( ( uxIndex < uxSourceLen ) && ( pucByte[ uxIndex ] != ( uint8_t )0x00U ) )
         {
+            i ++;
+
             /* If this is not the first time through the loop, then add a
             separator in the output. */
             if( ( uxNameLen > 0U ) )
@@ -84,9 +92,11 @@ size_t uxCount;
                 break;
             }
       //      loop invariant 0 <= uxCount;
+      //      loop assigns pcName[\at(uxNameLen, LoopEntry) .. uxDestLen - 1], uxNameLen, uxIndex, uxCount;
+
             /*@
                 loop invariant 0 <= uxIndex <= uxSourceLen;
-                loop assigns pcName[\at(uxNameLen, LoopEntry) .. uxDestLen - 1], uxNameLen, uxIndex, uxCount;
+                loop assigns uxNameLen, uxIndex, uxCount;
                 loop variant uxCount;
             */               
             while( ( uxCount-- != 0U ) && ( uxIndex < uxSourceLen ) )

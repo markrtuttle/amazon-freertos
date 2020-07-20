@@ -1,11 +1,23 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <limits.h>
 
 #define dnsNAME_IS_OFFSET					( ( uint8_t ) 0xc0 )
 
 /*@
-    requires \valid(pucByte + (0 .. uxLength - 1));
-    assigns \nothing;
+    predicate is_size_t(size_t n) = 
+        0 <= n <= SIZE_MAX;
+*/
+
+
+/*@
+    requires \valid(pucByte + (0 .. uxLength*SIZE_MAX));
+	requires \forall size_t j; 0 <= j <= uxLength*SIZE_MAX ==>  is_size_t(pucByte[j]);
+	requires is_size_t(uxLength);
+    
+	assigns \nothing;
+
+	
 */
 static size_t prvSkipNameField( const uint8_t *pucByte,
 								size_t uxLength )
