@@ -9,13 +9,23 @@
         0 <= n <= SIZE_MAX;
 */
 
-
 /*@
     requires \valid(pucByte + (0 .. SIZE_MAX));
-	requires \forall size_t j; 0 <= j <= SIZE_MAX ==>  is_size_t(pucByte[j]);
+	requires \forall size_t j; 0 <= j <= SIZE_MAX ==> is_size_t(pucByte[j]);
 	requires is_size_t(uxLength);
     
 	assigns \nothing;
+
+	behavior zeroLength:
+		assumes uxLength == 0;
+		ensures \result == 0U;
+	
+	behavior nameIsOffset:
+		assumes (pucByte[0U] & dnsNAME_IS_OFFSET) == dnsNAME_IS_OFFSET;
+		ensures uxLength <= sizeof( uint16_t ) <==> \result == 0U;
+
+	behavior fullName:
+		assumes uxLength != 0U && ( pucByte[0U] & dnsNAME_IS_OFFSET ) != dnsNAME_IS_OFFSET;
 
 
 */
