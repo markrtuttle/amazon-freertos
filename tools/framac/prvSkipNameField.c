@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <limits.h>
 
 #define dnsNAME_IS_OFFSET					( ( uint8_t ) 0xc0 )
 

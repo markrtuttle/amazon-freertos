@@ -76,3 +76,12 @@ prvCheckOptions2:
 
 prvCheckOptions:
 	frama-c -wp -rte $(FRAMAC) prvCheckOptions.c -then -report
+
+prvParseDNSReply:
+	frama-c -wp -rte $(FRAMAC) prvParseDNSReply.c -then -report
+
+prvParseDNSReplyPreprocess:
+	gcc -E $(DEFINES) $(INCLUDES) $(CFLAGS) prvParseDNSReply.c > prvParseDNSReply.txt
+
+FreeRTOS_DNSPreprocess:
+	gcc -E $(DEFINES) $(INCLUDES) $(CFLAGS) FreeRTOS_DNS.c > FreeRTOS_DNSPP.c
