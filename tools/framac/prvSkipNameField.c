@@ -55,7 +55,7 @@ size_t uxIndex = 0U;
 		/* pucByte points to the full name. Walk over the string. */
         /*@
 			loop invariant uxIndex + uxSourceLenCpy == uxLength;
-			loop invariant uxIndex < uxLength;
+			loop invariant 0 <= uxIndex < uxLength;
             loop assigns uxChunkLength, uxSourceLenCpy, uxIndex;
             loop variant uxSourceLenCpy;
         */        
