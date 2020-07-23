@@ -38,6 +38,7 @@ typedef struct xDNSMessage DNSMessage_t;
 typedef long BaseType_t;
 
 #define ipPOINTER_CAST( TYPE, pointer  ) ( ( TYPE ) ( pointer ) )
+#define FreeRTOS_htons( x ) ( ( uint16_t ) ( x ) )
 #define FreeRTOS_ntohs( x ) FreeRTOS_htons( x )
 
 static uint16_t usChar2u16 (const uint8_t *apChr);
@@ -256,8 +257,28 @@ size_t uxCount;
     return uxIndex;
 }
 
+
+static BaseType_t prvProcessDNSCache( const char *pcName,
+										uint32_t *pulIP,
+										uint32_t ulTTL,
+										BaseType_t xLookUp );
+
+	// uint16_t usIdentifier;
+	// uint16_t usFlags;
+	// uint16_t usQuestions;
+	// uint16_t usAnswers;
+	// uint16_t usAuthorityRRs;
+	// uint16_t usAdditionalRRs;
+
+	// 	requires \valid(((DNSMessage_t *)pucUDPPayloadBuffer).usFlags);
+	// requires \valid(((DNSMessage_t *)pucUDPPayloadBuffer).usQuestions);
+	//	assigns pucUDPPayloadBuffer[0 .. sizeof(DNSMessage_t) + 1];
+
 /*@
-	requires \valid(pucUDPPayloadBuffer + (0 .. uxBufferLength - 1));
+	requires \valid(pucUDPPayloadBuffer + (0 .. sizeof(DNSMessage_t) + 1 ));
+
+
+
 */
 static uint32_t prvParseDNSReply( uint8_t *pucUDPPayloadBuffer,
 								  size_t uxBufferLength,
