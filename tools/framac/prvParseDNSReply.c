@@ -1,6 +1,7 @@
 /* Standard includes. */
 #include <stdint.h>
 #include <stdio.h>
+#include <limits.h>
 
 struct xDNSAnswerRecord
 {
@@ -35,12 +36,29 @@ typedef struct xDNSMessage DNSMessage_t;
 #define dnsEXPECTED_RX_FLAGS			0x0080U /* Should be a response, without any errors. */ 
 #define ipFALSE_BOOL		( 1 == 2 )
 
+#define FreeRTOS_printf( MSG )				do{} while( ipFALSE_BOOL )
+#define ipconfigDNS_CACHE_NAME_LENGTH   254
+
+
+// for now 
+#define ipconfigUSE_DNS_CACHE 1 
+#define ipconfigUSE_LLMNR 0
+
+
 typedef long BaseType_t;
 
 #define ipPOINTER_CAST( TYPE, pointer  ) ( ( TYPE ) ( pointer ) )
 #define FreeRTOS_htons( x ) ( ( uint16_t ) ( x ) )
 #define FreeRTOS_ntohs( x ) FreeRTOS_htons( x )
 
+/*@
+    predicate is_uint16(integer n) =
+        0 <= n < 1 << 16;
+*/
+
+/*@
+	assigns \nothing;
+*/
 static uint16_t usChar2u16 (const uint8_t *apChr);
 static uint16_t usChar2u16 (const uint8_t *apChr)
 {
@@ -49,6 +67,9 @@ static uint16_t usChar2u16 (const uint8_t *apChr)
 			  ( ( ( uint32_t )apChr[1] ) ) );
 }
 
+/*@
+	assigns \nothing;
+*/
 void *memcpy(void *dest, const void * src, size_t n);
 
 /*@
@@ -257,27 +278,26 @@ size_t uxCount;
     return uxIndex;
 }
 
-
+/*@
+	assigns \nothing;
+*/
 static BaseType_t prvProcessDNSCache( const char *pcName,
 										uint32_t *pulIP,
 										uint32_t ulTTL,
 										BaseType_t xLookUp );
 
-	// uint16_t usIdentifier;
-	// uint16_t usFlags;
-	// uint16_t usQuestions;
-	// uint16_t usAnswers;
-	// uint16_t usAuthorityRRs;
-	// uint16_t usAdditionalRRs;
-
-	// 	requires \valid(((DNSMessage_t *)pucUDPPayloadBuffer).usFlags);
-	// requires \valid(((DNSMessage_t *)pucUDPPayloadBuffer).usQuestions);
-	//	assigns pucUDPPayloadBuffer[0 .. sizeof(DNSMessage_t) + 1];
-
+// NB off by one error with uxBufferLength
 /*@
-	requires \valid(pucUDPPayloadBuffer + (0 .. sizeof(DNSMessage_t) + 1 ));
+	requires \valid(pucUDPPayloadBuffer + (0 .. uxBufferLength));
 
+	requires (uxBufferLength > sizeof(DNSMessage_t)) ==> is_uint16(((DNSMessage_t *)pucUDPPayloadBuffer)->usIdentifier);
+	requires (uxBufferLength > sizeof(DNSMessage_t)) ==> is_uint16(((DNSMessage_t *)pucUDPPayloadBuffer)->usFlags);
+	requires (uxBufferLength > sizeof(DNSMessage_t)) ==> is_uint16(((DNSMessage_t *)pucUDPPayloadBuffer)->usQuestions);
+	requires (uxBufferLength > sizeof(DNSMessage_t)) ==> is_uint16(((DNSMessage_t *)pucUDPPayloadBuffer)->usAnswers);
+	requires (uxBufferLength > sizeof(DNSMessage_t)) ==> is_uint16(((DNSMessage_t *)pucUDPPayloadBuffer)->usAuthorityRRs);
+	requires (uxBufferLength > sizeof(DNSMessage_t)) ==> is_uint16(((DNSMessage_t *)pucUDPPayloadBuffer)->usAdditionalRRs);
 
+	assigns *(pucUDPPayloadBuffer + (0 .. uxBufferLength));
 
 */
 static uint32_t prvParseDNSReply( uint8_t *pucUDPPayloadBuffer,
@@ -304,20 +324,27 @@ uint16_t usType = 0U;
 #endif
 
 	/* Ensure that the buffer is of at least minimal DNS message length. */
-	if( uxBufferLength < sizeof( DNSMessage_t ) )
+	// changed the following line (from < to <=):
+	if( uxBufferLength <= sizeof( DNSMessage_t ) )
 	{
 		return dnsPARSE_ERROR;
 	}
 
 	uxSourceBytesRemaining = uxBufferLength;
+	//@ assert uxSourceBytesRemaining == uxBufferLength ;
 
 	/* Parse the DNS message header.
 	MISRA c 2012 rule 11.3 relaxed to make byte by byte traversal easier */
 	pxDNSMessageHeader = ipPOINTER_CAST( DNSMessage_t *, pucUDPPayloadBuffer );
 
 	/* Introduce a do {} while (0) to allow the use of breaks. */
-	do
-	{
+	// loop contract 
+	/*
+		loop invariant uxSourceBytesRemaining <= uxBufferLength;
+	*/
+
+	// do
+	// {
 	size_t uxBytesRead = 0U;
 	size_t uxResult;
 
@@ -326,6 +353,7 @@ uint16_t usType = 0U;
 		uxSourceBytesRemaining -= sizeof( DNSMessage_t );
 
 		/* Skip any question records. */
+		//@assert is_uint16(pxDNSMessageHeader->usQuestions );
 		usQuestions = FreeRTOS_ntohs( pxDNSMessageHeader->usQuestions );
 
 		for( x = 0U; x < usQuestions; x++ )
@@ -342,6 +370,10 @@ uint16_t usType = 0U;
 #if( ipconfigUSE_DNS_CACHE == 1 ) || ( ipconfigDNS_USE_CALLBACKS == 1 )
 			if( x == 0U )
 			{
+				//@ assert uxSourceBytesRemaining == uxBufferLength - sizeof( DNSMessage_t );
+				//@ assert pucByte == &( pucUDPPayloadBuffer [ sizeof( DNSMessage_t ) ] );
+				//@ assert \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
+    			//@ assert \valid(pcName + (0 .. sizeof( pcName )  - 1));
 				uxResult = prvReadNameField( pucByte,
 											 uxSourceBytesRemaining,
 											 pcName,
@@ -355,11 +387,14 @@ uint16_t usType = 0U;
 				uxBytesRead += uxResult;
 				pucByte = &( pucByte[ uxResult ] );
 				uxSourceBytesRemaining -= uxResult;
+				//@ assert uxSourceBytesRemaining >= 0;
+
 			}
 			else
 #endif /* ipconfigUSE_DNS_CACHE || ipconfigDNS_USE_CALLBACKS */
 			{
 				/* Skip the variable length pcName field. */
+				//@ assert \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
 				uxResult = prvSkipNameField( pucByte,
 											 uxSourceBytesRemaining );
 
@@ -371,6 +406,8 @@ uint16_t usType = 0U;
 				uxBytesRead += uxResult;
 				pucByte = &( pucByte[ uxResult ] );
 				uxSourceBytesRemaining -= uxResult;
+				//@ assert uxSourceBytesRemaining >= 0;
+
 			}
 
 			/* Check the remaining buffer size. */
@@ -387,6 +424,7 @@ uint16_t usType = 0U;
 				/* Skip the type and class fields. */
 				pucByte = &( pucByte[ sizeof( uint32_t ) ] );
 				uxSourceBytesRemaining -= sizeof( uint32_t );
+
 			}
 			else
 			{
@@ -405,6 +443,7 @@ uint16_t usType = 0U;
 			{
 			BaseType_t xDoAccept;
 
+				//@ assert \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
 				uxResult = prvSkipNameField( pucByte,
 											 uxSourceBytesRemaining );
 
@@ -609,7 +648,7 @@ uint16_t usType = 0U;
 		}
 #endif /* ipconfigUSE_LLMNR == 1 */
 		( void ) uxBytesRead;
-	} while( ipFALSE_BOOL );
+//	} while( ipFALSE_BOOL );
 
 	if( xExpected == pdFALSE )
 	{

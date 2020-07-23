@@ -78,10 +78,16 @@ prvCheckOptions:
 	frama-c -wp -rte $(FRAMAC) prvCheckOptions.c -then -report
 
 prvParseDNSReply:
-	frama-c -wp -rte $(FRAMAC) prvParseDNSReply.c -then -report
+	frama-c -wp $(FRAMAC) prvParseDNSReply.c -wp-timeout 25 -then -report
 
 prvParseDNSReplyPreprocess:
 	gcc -E $(DEFINES) $(INCLUDES) $(CFLAGS) prvParseDNSReply.c > prvParseDNSReply.txt
 
 FreeRTOS_DNSPreprocess:
 	gcc -E $(DEFINES) $(INCLUDES) $(CFLAGS) FreeRTOS_DNS.c > FreeRTOS_DNSPP.c
+
+prvReadNameField:
+	frama-c -wp -rte prvReadNameField.c -then -report
+
+prvSkipNameField:
+	frama-c -wp -rte prvSkipNameField.c -then -report

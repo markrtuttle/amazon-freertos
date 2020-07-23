@@ -10,6 +10,7 @@
     assigns pcName[0 .. uxDestLen - 1];
 
     ensures uxRemainingBytes == ( size_t ) 0U ==> \result == 0U;
+    ensures 0 <= \result <= uxRemainingBytes;
 */
 static size_t prvReadNameField( const uint8_t *pucByte,
                                 size_t uxRemainingBytes,

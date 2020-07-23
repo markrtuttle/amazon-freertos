@@ -8,6 +8,8 @@
     
 	assigns \nothing;
 
+	ensures 0 <= \result <= uxLength;
+
 	behavior zeroLength:
 		assumes uxLength == 0;
 		ensures \result == 0U;
