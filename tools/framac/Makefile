@@ -78,7 +78,7 @@ prvCheckOptions:
 	frama-c -wp -rte $(FRAMAC) prvCheckOptions.c -then -report
 
 prvParseDNSReply:
-	frama-c -wp $(FRAMAC) prvParseDNSReply.c -wp-timeout 25 -then -report
+	frama-c -wp $(FRAMAC) prvParseDNSReply.c -wp-timeout 25 -then -report 
 
 prvParseDNSReplyPreprocess:
 	gcc -E $(DEFINES) $(INCLUDES) $(CFLAGS) prvParseDNSReply.c > prvParseDNSReply.txt

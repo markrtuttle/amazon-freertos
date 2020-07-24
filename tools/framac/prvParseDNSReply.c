@@ -35,6 +35,7 @@ typedef struct xDNSMessage DNSMessage_t;
 #define dnsRX_FLAGS_MASK				0x0f80U /* The bits of interest in the flags field of incoming DNS messages. */
 #define dnsEXPECTED_RX_FLAGS			0x0080U /* Should be a response, without any errors. */ 
 #define ipFALSE_BOOL		( 1 == 2 )
+#define ipPOINTER_CAST( TYPE, pointer  ) ( ( TYPE ) ( pointer ) )
 
 #define FreeRTOS_printf( MSG )				do{} while( ipFALSE_BOOL )
 #define ipconfigDNS_CACHE_NAME_LENGTH   254
@@ -336,6 +337,7 @@ uint16_t usType = 0U;
 	/* Parse the DNS message header.
 	MISRA c 2012 rule 11.3 relaxed to make byte by byte traversal easier */
 	pxDNSMessageHeader = ipPOINTER_CAST( DNSMessage_t *, pucUDPPayloadBuffer );
+	//@assert (uint8_t *)pxDNSMessageHeader == pucUDPPayloadBuffer;
 
 	/* Introduce a do {} while (0) to allow the use of breaks. */
 	// loop contract 
