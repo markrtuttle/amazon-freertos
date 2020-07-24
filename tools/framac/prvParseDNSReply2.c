@@ -291,6 +291,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
   /* Parse the DNS message header.
   MISRA c 2012 rule 11.3 relaxed to make byte by byte traversal easier */
   pxDNSMessageHeader = ipPOINTER_CAST(DNSMessage_t *, pucUDPPayloadBuffer);
+  //@ assert (uint8_t*)pxDNSMessageHeader == pucUDPPayloadBuffer;
 
   /* Introduce a do {} while (0) to allow the use of breaks. */
   // loop contract
@@ -313,7 +314,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
 
   /*@
     loop assigns pcName[0 .. ipconfigDNS_CACHE_NAME_LENGTH-1];
-    loop assigns pxDNSMessageHeader;
+    loop assigns pxDNSMessageHeader[0 .. sizeof(DNSMessage_t)-1];
     loop assigns pxDNSAnswerRecord;
     loop assigns ulIPAddress;
     loop assigns pucByte;
@@ -326,6 +327,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     loop assigns usDataLength;
     loop assigns x;
     loop invariant pucUDPPayloadBuffer == (uint8_t*)pxDNSMessageHeader;
+    loop invariant sizeof(DNSMessage_t) <= uxBufferLength;
     loop invariant \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
     loop invariant \valid(pcName + (0 .. sizeof( pcName ) - 1));
    */
