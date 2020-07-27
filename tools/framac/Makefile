@@ -10,7 +10,7 @@ INCLUDES = \
 	-I$(FREERTOS)/tools/framac \
 	-I$(FREERTOS)/freertos_kernel/include \
 	-I$(FREERTOS)/freertos_kernel/portable/MSVC-MingW \
-		-I$(FREERTOS)/freertos_kernel/portable/ARMv8M/non_secure/GCC/ARM_CM23 \
+	-I$(FREERTOS)/freertos_kernel/portable/ARMv8M/non_secure/GCC/ARM_CM23 \
 	-I$(FREERTOS)/vendors/pc/boards/windows/aws_demos/config_files \
 	-I$(FREERTOS)/vendors/pc/boards/windows/aws_demos/application_code \
 	-I$(FREERTOS)/demos/include \
