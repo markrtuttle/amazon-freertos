@@ -46,7 +46,6 @@ uint16_t parseBuffer(uint8_t *buffer, uint16_t bufferLength) {
     assigns \nothing;
 */
 uint16_t foo(uint8_t a) {
-
     uint16_t A = a * 2^8 + (2^8 - 1);
     return A;
 }

@@ -83,8 +83,8 @@ prvParseDNSReply:
 prvParseDNSReply2:
 	frama-c -wp $(FRAMAC) prvParseDNSReply2.c -wp-timeout 25 -then -report 
 
-prvParseDNSReplyStructs:
-	frama-c -wp $(FRAMAC) prvParseDNSReplyStructs.c -wp-timeout 25 -then -report 
+prvParseDNSReplyNoCast:
+	frama-c -wp $(FRAMAC) prvParseDNSReplyNoCast.c -wp-timeout 25 -then -report 
 
 prvParseDNSReplyPreprocess:
 	gcc -E $(DEFINES) $(INCLUDES) $(CFLAGS) prvParseDNSReply.c > prvParseDNSReply.txt
