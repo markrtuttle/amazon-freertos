@@ -54,12 +54,22 @@ typedef long BaseType_t;
 #define FreeRTOS_ntohs(x) FreeRTOS_htons(x)
 
 /*@
-    predicate is_uint16(integer n) =
-        0 <= n < 1 << 16;
+  predicate is_uint8_t(integer n) =
+      0 <= n <= UCHAR_MAX;
+  
+  predicate is_uint16_t(integer n) =
+      0 <= n <= USHRT_MAX;
+  
+  predicate is_uint32_t(integer n) =
+      0 <= n <= UINT_MAX;
+
+  predicate in_range(uint8_t * ptr, uint8_t *buffer, size_t bufferLen) = 
+    buffer <= ptr <= buffer + bufferLen - 1;
 */
 
 /*@
-        assigns \nothing;
+  assigns \nothing;
+  ensures is_uint16_t(\result);
 */
 static uint16_t usChar2u16(const uint8_t *apChr);
 static uint16_t usChar2u16(const uint8_t *apChr) {
@@ -67,27 +77,16 @@ static uint16_t usChar2u16(const uint8_t *apChr) {
 }
 
 /*@
-        assigns \nothing;
+  assigns \nothing;
 */
 void *memcpy(void *dest, const void *src, size_t n);
 
 /*@
     requires \valid(pucByte + (0 .. uxLength - 1));
-        assigns \nothing;
-        behavior zeroLength:
-                assumes uxLength == 0;
-                ensures \result == 0U;
-        behavior nameIsOffset:
-                assumes uxLength != 0 && (pucByte[0U] & dnsNAME_IS_OFFSET) ==
-   dnsNAME_IS_OFFSET; ensures uxLength <= sizeof( uint16_t ) <==> \result == 0U;
-                ensures uxLength > sizeof( uint16_t ) <==> \result == sizeof(
-   uint16_t );
-        behavior fullName:
-                assumes uxLength != 0U && ( pucByte[0U] & dnsNAME_IS_OFFSET ) !=
-   dnsNAME_IS_OFFSET; ensures \result == 0 ==> \exists size_t j; 0 <= j <
-   uxLength ==> pucByte[j] != 0;
-        complete behaviors;
-        disjoint behaviors;
+    
+	assigns \nothing;
+
+	ensures 0 <= \result <= uxLength;
 */
 static size_t prvSkipNameField(const uint8_t *pucByte, size_t uxLength) {
   size_t uxChunkLength;
@@ -144,8 +143,10 @@ static size_t prvSkipNameField(const uint8_t *pucByte, size_t uxLength) {
 /*@
     requires \valid(pucByte + (0 .. uxRemainingBytes - 1));
     requires \valid(pcName + (0 .. uxDestLen - 1));
+
     assigns pcName[0 .. uxDestLen - 1];
-    ensures uxRemainingBytes == ( size_t ) 0U ==> \result == 0U;
+
+    ensures 0 <= \result <= uxRemainingBytes;
 */
 static size_t prvReadNameField(const uint8_t *pucByte, size_t uxRemainingBytes,
                                char *pcName, size_t uxDestLen) {
@@ -252,6 +253,7 @@ static uint16_t getUint16(uint8_t *buffer, size_t offset) {
 /*@
   requires \valid(buffer + (0 .. offset + 3));
   assigns \nothing;
+  // ensures is_uint32_t(\result);
 */
 static uint32_t getUint32(uint8_t *buffer, size_t offset) {
     return (uint32_t)(*(buffer + offset) * 2^24 +  *(buffer + offset + 1) * 2^16 +  *(buffer + offset + 2) * 2^8 +  *(buffer + offset + 3));  
@@ -260,6 +262,7 @@ static uint32_t getUint32(uint8_t *buffer, size_t offset) {
 /*@
   requires \valid(buffer + (0 .. 1));
   assigns \nothing;
+  ensures is_uint16_t(\result);
 */
 static uint16_t getUsIdentifier(uint8_t *buffer) {
   size_t offset = offsetof(struct xDNSMessage, usIdentifier);
@@ -269,6 +272,7 @@ static uint16_t getUsIdentifier(uint8_t *buffer) {
 /*@
   requires \valid(buffer + (0 .. 3));
   assigns \nothing;
+  ensures is_uint16_t(\result);
 */
 static uint16_t getUsFlags(uint8_t *buffer) {
   size_t offset = offsetof(struct xDNSMessage, usFlags);
@@ -278,7 +282,7 @@ static uint16_t getUsFlags(uint8_t *buffer) {
 /*@
   requires \valid(buffer + (0 .. 5));
   assigns \nothing;
-
+  ensures is_uint16_t(\result);
 */
 static uint16_t getUsQuestions(uint8_t *buffer) {
   size_t offset = offsetof(struct xDNSMessage, usQuestions);
@@ -288,6 +292,7 @@ static uint16_t getUsQuestions(uint8_t *buffer) {
 /*@
   requires \valid(buffer + (0 .. 7));
   assigns \nothing;
+  ensures is_uint16_t(\result);
 */
 static uint16_t getUsAnswers(uint8_t *buffer) {
   size_t offset = offsetof(struct xDNSMessage, usAnswers);
@@ -297,6 +302,7 @@ static uint16_t getUsAnswers(uint8_t *buffer) {
 /*@
   requires \valid(buffer + (0 .. 7));
   assigns \nothing;
+  ensures is_uint32_t(\result);
 */
 static uint32_t getUlTTL(uint8_t *buffer) {
   size_t offset = offsetof(struct xDNSAnswerRecord, ulTTL);
@@ -306,6 +312,7 @@ static uint32_t getUlTTL(uint8_t *buffer) {
 /*@
   requires \valid(buffer + (0 .. 9));
   assigns \nothing;
+  ensures is_uint16_t(\result);
 */
 static uint16_t getUsDataLength(uint8_t *buffer) {
   size_t offset = offsetof(struct xDNSAnswerRecord, usDataLength);
@@ -314,8 +321,13 @@ static uint16_t getUsDataLength(uint8_t *buffer) {
 
 /*@
   requires \valid(pucUDPPayloadBuffer + (0 .. uxBufferLength - 1));
+  requires \forall size_t i; 0 <= i < uxBufferLength ==> is_uint8_t(*(pucUDPPayloadBuffer + i));
+  requires \forall size_t i; 0 <= i < uxBufferLength ==> is_uint16_t(*(pucUDPPayloadBuffer + i) * 2^8);
+  requires \forall size_t i; 0 <= i < uxBufferLength ==> is_uint32_t(*(pucUDPPayloadBuffer + i) * 2^24);
 
-  assigns *(pucUDPPayloadBuffer + (0 .. uxBufferLength - 1 ));
+  assigns \nothing;
+
+  ensures is_uint32_t(\result);
 */
 static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
                                  size_t uxBufferLength, BaseType_t xExpected) {
@@ -364,22 +376,23 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
   /* Start at the first byte after the header. */
   pucByte = &(pucUDPPayloadBuffer[sizeof(DNSMessage_t)]);
   //@assert  pucByte == &(pucUDPPayloadBuffer[sizeof(DNSMessage_t)]);
+  //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
   uxSourceBytesRemaining -= sizeof(DNSMessage_t);
+  // assert \valid(pucByte + (0 .. uxSourceBytesRemaining));
 
 // first for loop reads the first question and then skips all the next questions (each question is a name followed by 2 uint16_t's i.e. uint32_t)
   /*@
     loop assigns uxResult;
     loop assigns x;
-    loop assigns pcName[0 .. sizeof(pcName)];
+    loop assigns pcName[0 .. sizeof(pcName) - 1];
     loop assigns pucByte;
     loop assigns uxBytesRead;
     loop assigns uxSourceBytesRemaining;
     loop assigns uxResult;
     loop invariant 0 <= x <= usQuestions;
-    loop invariant pucUDPPayloadBuffer <= pucByte <= pucUDPPayloadBuffer + uxBufferLength;
-    loop invariant sizeof(DNSMessage_t) <= uxBufferLength;
-	  loop invariant \valid(pucUDPPayloadBuffer + (0 .. uxBufferLength));
-    loop invariant \valid(pcName + (0 .. sizeof( pcName ) - 1));
+    loop invariant uxSourceBytesRemaining <= uxBufferLength;
+    loop invariant in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
+    // loop invariant pucByte + uxSourceBytesRemaining - 1 == pucUDPPayloadBuffer + uxBufferLength - 1;
     loop variant usQuestions - x;
   */
   for (x = 0U; x < usQuestions; x++) {
@@ -397,13 +410,19 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
       uxResult = prvReadNameField(pucByte, uxSourceBytesRemaining, pcName,
                                   sizeof(pcName));
 
+      //@assert uxResult <= uxSourceBytesRemaining;
+      //@assert uxResult <= uxBufferLength;     
       /* Check for a malformed response. */
       if (uxResult == 0U) {
         return dnsPARSE_ERROR;
       }
       uxBytesRead += uxResult;
+      //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
+      //@assert in_range(&(pucByte[uxResult]), pucUDPPayloadBuffer, uxBufferLength);
       pucByte = &(pucByte[uxResult]);
+      //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
       uxSourceBytesRemaining -= uxResult;
+      //@assert pucUDPPayloadBuffer - pucByte == uxSourceBytesRemaining;
 
     } else
 #endif /* ipconfigUSE_DNS_CACHE || ipconfigDNS_USE_CALLBACKS */
@@ -421,6 +440,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     }
 
     /* Check the remaining buffer size. */
+    //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
     if (uxSourceBytesRemaining >= sizeof(uint32_t)) {
 #if (ipconfigUSE_LLMNR == 1)
       {
@@ -437,6 +457,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     } else {
       return dnsPARSE_ERROR;
     }
+    //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
   }
 
   if ((usFlags & dnsRX_FLAGS_MASK) ==

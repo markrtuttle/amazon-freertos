@@ -9,22 +9,6 @@
 	assigns \nothing;
 
 	ensures 0 <= \result <= uxLength;
-
-	behavior zeroLength:
-		assumes uxLength == 0;
-		ensures \result == 0U;
-	
-	behavior nameIsOffset:
-		assumes uxLength != 0 && (pucByte[0U] & dnsNAME_IS_OFFSET) == dnsNAME_IS_OFFSET;
-		ensures uxLength <= sizeof( uint16_t ) <==> \result == 0U;
-		ensures uxLength > sizeof( uint16_t ) <==> \result == sizeof( uint16_t );
-
-	behavior fullName:
-		assumes uxLength != 0U && ( pucByte[0U] & dnsNAME_IS_OFFSET ) != dnsNAME_IS_OFFSET;
-		ensures \result == 0 ==> \exists size_t j; 0 <= j < uxLength ==> pucByte[j] != 0; 
-
-	complete behaviors;
-	disjoint behaviors;
 */
 static size_t prvSkipNameField( const uint8_t *pucByte,
 								size_t uxLength )
