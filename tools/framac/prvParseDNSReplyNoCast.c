@@ -83,7 +83,7 @@ static uint16_t usChar2u16(const uint8_t *apChr) {
 void *memcpy(void *dest, const void *src, size_t n);
 
 /*@
-    requires \valid(pucByte + (0 .. uxLength - 1));
+  requires \valid(pucByte + (0 .. uxLength - 1));
 
 	assigns \nothing;
 
@@ -109,8 +109,8 @@ static size_t prvSkipNameField(const uint8_t *pucByte, size_t uxLength) {
   } else {
     /* pucByte points to the full name. Walk over the string. */
     /*@
-                    loop invariant uxIndex + uxSourceLenCpy == uxLength;
-                    loop invariant 0 <= uxIndex < uxLength;
+        loop invariant uxIndex + uxSourceLenCpy == uxLength;
+        loop invariant 0 <= uxIndex < uxLength;
         loop assigns uxChunkLength, uxSourceLenCpy, uxIndex;
         loop variant uxSourceLenCpy;
     */
@@ -238,26 +238,25 @@ static size_t prvReadNameField(const uint8_t *pucByte, size_t uxRemainingBytes,
 }
 
 /*@
-        assigns \nothing;
+  assigns \nothing;
 */
 static BaseType_t prvProcessDNSCache(const char *pcName, uint32_t *pulIP,
                                      uint32_t ulTTL, BaseType_t xLookUp);
 
 /*@
-  requires \valid(buffer + (0 .. offset + 1));
+  requires \valid(buffer + (offset .. offset + 1));
   assigns \nothing;
 */
 static uint16_t getUint16(uint8_t *buffer, size_t offset) {
-    return (uint16_t)(*(buffer + offset) * 2^8 +  *(buffer + offset + 1));
+    return (uint16_t)(*(buffer + offset) * 2^16 +  *(buffer + offset + 1));
 }
 
 /*@
-  requires \valid(buffer + (0 .. offset + 3));
+  requires \valid(buffer + (offset .. offset + 3));
   assigns \nothing;
-  // ensures is_uint32_t(\result);
 */
 static uint32_t getUint32(uint8_t *buffer, size_t offset) {
-    return (uint32_t)(*(buffer + offset) * 2^24 +  *(buffer + offset + 1) * 2^16 +  *(buffer + offset + 2) * 2^8 +  *(buffer + offset + 3));
+    return (uint32_t)(*(buffer + offset) * 2^24 +  *(buffer + offset + 1) * 2^16 +  *(buffer + offset + 2) * 2 ^ 8 +  *(buffer + offset + 3));
 }
 
 /*@
@@ -382,7 +381,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     loop assigns uxBytesRead;
     loop assigns uxSourceBytesRemaining;
     loop assigns uxResult;
-    loop invariant \valid(pucByte + (0 .. uxSourceBytesRemaining-1));
+    loop invariant \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
     loop variant usQuestions - x;
   */
   for (x = 0U; x < usQuestions; x++) {
