@@ -56,24 +56,25 @@ typedef long BaseType_t;
 /*@
   predicate is_uint8_t(integer n) =
       0 <= n <= UCHAR_MAX;
-  
+
   predicate is_uint16_t(integer n) =
       0 <= n <= USHRT_MAX;
-  
+
   predicate is_uint32_t(integer n) =
       0 <= n <= UINT_MAX;
 
-  predicate in_range(uint8_t * ptr, uint8_t *buffer, size_t bufferLen) = 
+  predicate in_range(uint8_t * ptr, uint8_t *buffer, size_t bufferLen) =
     buffer <= ptr <= buffer + bufferLen - 1;
 */
 
 /*@
+  requires \valid(apChr + (0 .. 1));
   assigns \nothing;
   ensures is_uint16_t(\result);
 */
 static uint16_t usChar2u16(const uint8_t *apChr);
 static uint16_t usChar2u16(const uint8_t *apChr) {
-  return (uint16_t)((((uint32_t)apChr[0]) << 8) | (((uint32_t)apChr[1])));
+  return apChr[0] * 256 + apChr[1];
 }
 
 /*@
@@ -83,7 +84,7 @@ void *memcpy(void *dest, const void *src, size_t n);
 
 /*@
     requires \valid(pucByte + (0 .. uxLength - 1));
-    
+
 	assigns \nothing;
 
 	ensures 0 <= \result <= uxLength;
@@ -256,7 +257,7 @@ static uint16_t getUint16(uint8_t *buffer, size_t offset) {
   // ensures is_uint32_t(\result);
 */
 static uint32_t getUint32(uint8_t *buffer, size_t offset) {
-    return (uint32_t)(*(buffer + offset) * 2^24 +  *(buffer + offset + 1) * 2^16 +  *(buffer + offset + 2) * 2^8 +  *(buffer + offset + 3));  
+    return (uint32_t)(*(buffer + offset) * 2^24 +  *(buffer + offset + 1) * 2^16 +  *(buffer + offset + 2) * 2^8 +  *(buffer + offset + 3));
 }
 
 /*@
@@ -321,12 +322,7 @@ static uint16_t getUsDataLength(uint8_t *buffer) {
 
 /*@
   requires \valid(pucUDPPayloadBuffer + (0 .. uxBufferLength - 1));
-  requires \forall size_t i; 0 <= i < uxBufferLength ==> is_uint8_t(*(pucUDPPayloadBuffer + i));
-  requires \forall size_t i; 0 <= i < uxBufferLength ==> is_uint16_t(*(pucUDPPayloadBuffer + i) * 2^8);
-  requires \forall size_t i; 0 <= i < uxBufferLength ==> is_uint32_t(*(pucUDPPayloadBuffer + i) * 2^24);
-
   assigns \nothing;
-
   ensures is_uint32_t(\result);
 */
 static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
@@ -375,10 +371,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
 
   /* Start at the first byte after the header. */
   pucByte = &(pucUDPPayloadBuffer[sizeof(DNSMessage_t)]);
-  //@assert  pucByte == &(pucUDPPayloadBuffer[sizeof(DNSMessage_t)]);
-  //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
   uxSourceBytesRemaining -= sizeof(DNSMessage_t);
-  // assert \valid(pucByte + (0 .. uxSourceBytesRemaining));
 
 // first for loop reads the first question and then skips all the next questions (each question is a name followed by 2 uint16_t's i.e. uint32_t)
   /*@
@@ -389,10 +382,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     loop assigns uxBytesRead;
     loop assigns uxSourceBytesRemaining;
     loop assigns uxResult;
-    loop invariant 0 <= x <= usQuestions;
-    loop invariant uxSourceBytesRemaining <= uxBufferLength;
-    loop invariant in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
-    // loop invariant pucByte + uxSourceBytesRemaining - 1 == pucUDPPayloadBuffer + uxBufferLength - 1;
+    loop invariant \valid(pucByte + (0 .. uxSourceBytesRemaining-1));
     loop variant usQuestions - x;
   */
   for (x = 0U; x < usQuestions; x++) {
@@ -406,23 +396,16 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
 
 #if (ipconfigUSE_DNS_CACHE == 1) || (ipconfigDNS_USE_CALLBACKS == 1)
     if (x == 0U) {
-      //@ assert \valid(pcName + (0 .. sizeof(pcName) - 1));
       uxResult = prvReadNameField(pucByte, uxSourceBytesRemaining, pcName,
                                   sizeof(pcName));
 
-      //@assert uxResult <= uxSourceBytesRemaining;
-      //@assert uxResult <= uxBufferLength;     
       /* Check for a malformed response. */
       if (uxResult == 0U) {
         return dnsPARSE_ERROR;
       }
       uxBytesRead += uxResult;
-      //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
-      //@assert in_range(&(pucByte[uxResult]), pucUDPPayloadBuffer, uxBufferLength);
       pucByte = &(pucByte[uxResult]);
-      //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
       uxSourceBytesRemaining -= uxResult;
-      //@assert pucUDPPayloadBuffer - pucByte == uxSourceBytesRemaining;
 
     } else
 #endif /* ipconfigUSE_DNS_CACHE || ipconfigDNS_USE_CALLBACKS */
@@ -440,7 +423,6 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     }
 
     /* Check the remaining buffer size. */
-    //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
     if (uxSourceBytesRemaining >= sizeof(uint32_t)) {
 #if (ipconfigUSE_LLMNR == 1)
       {
@@ -457,7 +439,6 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     } else {
       return dnsPARSE_ERROR;
     }
-    //@assert in_range(pucByte, pucUDPPayloadBuffer, uxBufferLength);
   }
 
   if ((usFlags & dnsRX_FLAGS_MASK) ==
@@ -465,7 +446,6 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
     const uint16_t usCount = (uint16_t)ipconfigDNS_CACHE_ADDRESSES_PER_ENTRY;
 
     /*@
-      loop assigns pucByte[0 .. uxSourceBytesRemaining-1];
       loop assigns ulIPAddress;
       loop assigns pucByte;
       loop assigns uxSourceBytesRemaining;
@@ -476,14 +456,12 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
       loop assigns uxResult;
       loop assigns usDataLength;
       loop assigns x;
-      loop invariant 0 <= x <= usAnswers;
-      loop invariant x <= usCount;
+      loop invariant \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
       loop variant usAnswers - x;
     */
     for (x = 0U; (x < usAnswers) && (x < usCount); x++) {
       BaseType_t xDoAccept;
 
-    //@ assert \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
       uxResult = prvSkipNameField(pucByte, uxSourceBytesRemaining);
 
       /* Check for a malformed response. */
