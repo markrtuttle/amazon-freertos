@@ -62,9 +62,6 @@ typedef long BaseType_t;
 
   predicate is_uint32_t(integer n) =
       0 <= n <= UINT_MAX;
-
-  predicate in_range(uint8_t * ptr, uint8_t *buffer, size_t bufferLen) =
-    buffer <= ptr <= buffer + bufferLen - 1;
 */
 
 /*@
@@ -357,12 +354,10 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
   usQuestions = getUsQuestions(pucUDPPayloadBuffer);
   usAnswers = getUsAnswers(pucUDPPayloadBuffer);
 
-  /* Introduce a do {} while (0) to allow the use of breaks. */
-  // loop contract
-  /*
-          loop invariant uxSourceBytesRemaining <= uxBufferLength;
-  */
+  // pucByte = &(pucUDPPayloadBuffer[sizeof(DNSMessage_t)]);
+  // uxSourceBytesRemaining -= sizeof(DNSMessage_t);
 
+  /* Introduce a do {} while (0) to allow the use of breaks. */
   // do
   // {
   size_t uxBytesRead = 0U;
@@ -372,18 +367,17 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
   pucByte = &(pucUDPPayloadBuffer[sizeof(DNSMessage_t)]);
   uxSourceBytesRemaining -= sizeof(DNSMessage_t);
 
-// first for loop reads the first question and then skips all the next questions (each question is a name followed by 2 uint16_t's i.e. uint32_t)
-  /*@
-    loop assigns uxResult;
-    loop assigns x;
-    loop assigns pcName[0 .. sizeof(pcName) - 1];
-    loop assigns pucByte;
-    loop assigns uxBytesRead;
-    loop assigns uxSourceBytesRemaining;
-    loop assigns uxResult;
-    loop invariant \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
-    loop variant usQuestions - x;
-  */
+/*@
+  loop assigns uxResult;
+  loop assigns x;
+  loop assigns pcName[0 .. sizeof(pcName) - 1];
+  loop assigns pucByte;
+  loop assigns uxBytesRead;
+  loop assigns uxSourceBytesRemaining;
+  loop assigns uxResult;
+  loop invariant \valid(pucByte + (0 .. uxSourceBytesRemaining - 1));
+  loop variant usQuestions - x;
+*/
   for (x = 0U; x < usQuestions; x++) {
 #if (ipconfigUSE_LLMNR == 1)
     {
@@ -656,7 +650,7 @@ static uint32_t prvParseDNSReply(uint8_t *pucUDPPayloadBuffer,
   }
 #endif /* ipconfigUSE_LLMNR == 1 */
   (void)uxBytesRead;
-  //	} while( ipFALSE_BOOL );
+// } while( ipFALSE_BOOL );
 
   if (xExpected == pdFALSE) {
     /* Do not return a valid IP-address in case the reply was not expected. */
